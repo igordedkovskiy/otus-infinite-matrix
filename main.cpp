@@ -9,6 +9,7 @@ int main()
     InfiniteMatrix<int> m;
     auto a = m[0][0];
     ++a;
+    m[0][0] = 123;
 //    auto b = m[1];
 
     {
@@ -21,15 +22,6 @@ int main()
         matrix[100][100] = 314;
         assert(matrix[100][100] == 314);
         assert(matrix.size() == 1);
-
-        // выведется одна строка
-        // 100100314
-//        for(auto c: matrix)
-//        {
-//            int x,y,v;
-//            std::tie(x, y, v) = c;
-//            std::cout << x << y << v << std::endl;
-//        }
     }
     return 0;
 }
