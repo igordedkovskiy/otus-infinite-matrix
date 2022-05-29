@@ -104,7 +104,7 @@ public:
         {
             return m_size;
             std::size_t sz = 0;
-            for(const auto [key, val]:m_row)
+            for(const auto& [key, val]:m_row)
             {
                 if(val != default_v)
                     ++sz;
