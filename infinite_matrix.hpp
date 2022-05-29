@@ -14,68 +14,84 @@ public:
     class row_t
     {
     public:
+//        class node_t
+//        {
+//        public:
+//            node_t(const T& el, size_type row, size_type col):
+//                m_element{el},
+//                m_row_number{row},
+//                m_column_number{col}
+//            {}
+//        private:
+//            T m_element;
+//            size_type m_row_number = 0;
+//            size_type m_column_number = 0;
+//        };
+
         using nested_row_t = std::unordered_map<size_type, T>;
+        //using nested_row_t = std::unordered_map<size_type, node_t>;
 
-        struct Iterator
-        {
-            using value_type = T;
-            using pointer = T*;
-            using reference = T&;
+//        struct Iterator
+//        {
+//            using value_type = std::pair<size_type, T>;
+//            using pointer = T*;
+//            using reference = T&;
 
-            Iterator() noexcept = default;
+//            Iterator() noexcept = default;
 
-            Iterator(const typename nested_row_t::iterator& p) noexcept:
-                ptr{p}
-            {}
+//            Iterator(const typename nested_row_t::iterator& p) noexcept:
+//                ptr{p}
+//            {}
 
-            Iterator(const Iterator& l) noexcept:
-                ptr{l.ptr}
-            {}
+//            Iterator(const Iterator& l) noexcept:
+//                ptr{l.ptr}
+//            {}
 
-            ~Iterator() noexcept = default;
+//            ~Iterator() noexcept = default;
 
-            Iterator& operator=(const Iterator& l) noexcept
-            {
-                ptr = l.ptr;
-                return *this;
-            }
+//            Iterator& operator=(const Iterator& l) noexcept
+//            {
+//                ptr = l.ptr;
+//                return *this;
+//            }
 
-            Iterator& operator++() noexcept
-            {
-                ++ptr;
-                return *this;
-            }
+//            Iterator& operator++() noexcept
+//            {
+//                ++ptr;
+//                return *this;
+//            }
 
-            Iterator& operator++(int) noexcept
-            {
-                ++ptr;
-                return *this;
-            }
+//            Iterator& operator++(int) noexcept
+//            {
+//                ++ptr;
+//                return *this;
+//            }
 
-            reference operator*() const noexcept
-            {
-                return ptr->second;
-            }
+//            reference operator*() const noexcept
+//            {
+//                return ptr->second;
+//            }
 
-            pointer operator->() const noexcept
-            {
-                return &(ptr->second);
-            }
+//            pointer operator->() const noexcept
+//            {
+//                return &(ptr->second);
+//            }
 
-            friend bool operator==(const Iterator& l, const Iterator& r) noexcept
-            {
-                return l.ptr == r.ptr;
-            }
+//            friend bool operator==(const Iterator& l, const Iterator& r) noexcept
+//            {
+//                return l.ptr == r.ptr;
+//            }
 
-            friend bool operator!=(const Iterator& l, const Iterator& r) noexcept
-            {
-                return l.ptr != r.ptr;
-            }
+//            friend bool operator!=(const Iterator& l, const Iterator& r) noexcept
+//            {
+//                return l.ptr != r.ptr;
+//            }
 
-        private:
-            typename nested_row_t::iterator ptr;
-        };
+//        private:
+//            typename nested_row_t::iterator ptr;
+//        };
 
+        using Iterator = typename nested_row_t::iterator;
         using iterator = Iterator;
         using const_iterator = const Iterator;
 
@@ -100,12 +116,13 @@ public:
         }
 
 
-        T& operator[](const T& key)
+        T& operator[](const size_type& key)
         {
             auto el = m_row.find(key);
             if(el == m_row.end())
             {
                 auto res = m_row.emplace(std::make_pair(key, default_v));
+                //auto res = m_row.emplace(std::make_pair(key, node_t{default_v, key}));
                 //if(!res.second)
                 //    throw?
                 el = res.first;
@@ -140,12 +157,14 @@ public:
 
     struct Iterator
     {
+        using element_type = std::tuple<size_type, size_type, T>;
+
         using row_iterator = typename data_t::iterator;
         using el_iterator = typename data_t::mapped_type::iterator;
         using value_type = T;
         using pointer = T*;
         //using reference = T&;
-        using reference = std::tuple<size_type, size_type, size_type>;
+        using reference = element_type&;
 
         Iterator() noexcept = default;
 
@@ -154,35 +173,15 @@ public:
             m_row_it{row},
             m_el_it{el}
         {
-            if(m_row_it != std::begin(m_data))
-            {
-                auto it = std::begin(m_data);
-                while(it++ != m_row_it)
-                    ++m_row_number;
-            }
-
-            if(m_el_it != std::begin(m_row_it->second))
-            {
-                auto it = std::begin(m_row_it->second);
-                while(it++ != m_el_it)
-                    ++m_column_number;
-            }
+            if(m_el_it != std::end(m_row_it->second))
+                m_element = std::make_tuple(m_row_it->first, m_el_it->first, m_el_it->second);
         }
-
-        Iterator(data_t& data, const row_iterator& row, const el_iterator& el, size_type row_n, size_type col_n) noexcept:
-            m_data{data},
-            m_row_it{row},
-            m_el_it{el},
-            m_row_number{row_n},
-            m_column_number{col_n}
-        {}
 
         Iterator(const Iterator& l) noexcept:
             m_data{l.m_data},
             m_row_it{l.m_row_it},
             m_el_it{l.m_el_it},
-            m_row_number{l.m_row_number},
-            m_column_number{l.m_column_number}
+            m_element{l.m_element}
         {}
 
         ~Iterator() noexcept = default;
@@ -192,49 +191,29 @@ public:
             m_data = l.m_data;
             m_row_it = l.m_row_it;
             m_el_it = l.m_el_it;
-            m_row_number = l.m_row_number;
-            m_column_number = l.m_column_number;
+            m_element = l.m_element;
             return *this;
         }
 
         Iterator& operator++() noexcept
         {
             ++m_el_it;
-            ++m_column_number;
             if((m_el_it == std::end(m_row_it->second)) && (m_row_it != std::end(m_data)))
             {
                 ++m_row_it;
                 m_el_it = std::begin(m_row_it->second);
-                ++m_row_number;
-                m_column_number = 0;
             }
             return *this;
         }
 
-//        Iterator& operator++(int) noexcept
-//        {
-//            ++m_el_it;
-//            ++m_column_number;
-//            if((m_el_it == std::end(m_row_it->second)) && (m_row_it != std::end(m_data)))
-//            {
-//                ++m_row_it;
-//                m_el_it = std::begin(m_row_it->second);
-//                ++m_row_number;
-//                m_column_number = 0;
-//            }
-//            return *this;
-//        }
-
-//        Iterator& operator--() noexcept
-//        {
-//            --ptr;
-//            return *this;
-//        }
-
-        reference operator*() const noexcept
+        reference operator*() noexcept
         {
             //return *m_el_it;
-            return std::make_tuple(m_row_number, m_column_number, *m_el_it);
+            std::get<2>(m_element) = m_el_it->second;
+            auto r = m_el_it->second;
+            ++r;
+            r = std::get<2>(m_element);
+            return m_element;
         }
 
         pointer operator->() const noexcept
@@ -256,8 +235,7 @@ public:
         data_t& m_data;
         row_iterator m_row_it;
         el_iterator m_el_it;
-        size_type m_row_number = 0;
-        size_type m_column_number = 0;
+        element_type m_element{0,0,0};
     };
 
     using iterator = Iterator;
@@ -288,7 +266,7 @@ public:
     }
 
 
-    row_t& operator[](const T& key)
+    row_t& operator[](const size_type& key)
     {
         return m_matrix[key];
     }

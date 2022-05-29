@@ -27,8 +27,9 @@ int main()
         // 100100314
         for(const auto& it:matrix)
         {
-            int x,y,v;
-            std::tie(x, y, v) = it;
+            //int x,y,v;
+            //std::tie(x, y, v) = it;
+            const auto& [x,y,v] = it;
             std::cout << x << y << v << std::endl;
             //std::cout << it << std::endl;
         }
