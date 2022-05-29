@@ -22,6 +22,8 @@ int main()
         matrix[100][100] = 314;
         assert(matrix[100][100] == 314);
         assert(matrix.size() == 1);
+        matrix[100][100] = -1;
+        assert(matrix.size() == 0);
     }
     return 0;
 }
