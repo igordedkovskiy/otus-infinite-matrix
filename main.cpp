@@ -22,6 +22,17 @@ int main()
         matrix[100][100] = 314;
         assert(matrix[100][100] == 314);
         assert(matrix.size() == 1);
+
+        // выведется одна строка
+        // 100100314
+        for(const auto& it:matrix)
+        {
+            int x,y,v;
+            std::tie(x, y, v) = it;
+            std::cout << x << y << v << std::endl;
+            //std::cout << it << std::endl;
+        }
+
         matrix[100][100] = -1;
         assert(matrix.size() == 0);
     }
