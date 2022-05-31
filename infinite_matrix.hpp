@@ -11,6 +11,11 @@ template<Integer T, T default_v = 0> class InfiniteMatrix
 public:
     using size_type = std::size_t;
 
+    constexpr T default_value() const noexcept
+    {
+        return default_v;
+    }
+
     class row_t
     {
     public:
@@ -173,7 +178,8 @@ public:
             m_row_it{row},
             m_el_it{el}
         {
-            if(m_el_it != std::end(m_row_it->second))
+            const auto rw = std::next(std::begin(m_data), m_data.size()-1);
+            if((m_el_it != std::end(m_row_it->second)) && (m_el_it != std::end(rw->second)))
                 m_element = std::make_tuple(m_row_it->first, m_el_it->first, m_el_it->second);
         }
 
@@ -198,21 +204,22 @@ public:
         Iterator& operator++() noexcept
         {
             ++m_el_it;
-            if((m_el_it == std::end(m_row_it->second)) && (m_row_it != std::end(m_data)))
+            if(m_el_it == std::end(m_row_it->second))
             {
                 ++m_row_it;
-                m_el_it = std::begin(m_row_it->second);
+                if(m_row_it != std::end(m_data))
+                    m_el_it = std::begin(m_row_it->second);
             }
+            if(m_el_it != std::end(m_row_it->second))
+                std::get<1>(m_element) = m_el_it->first;
+            if(m_row_it != std::end(m_data))
+                std::get<0>(m_element) = m_row_it->first;
             return *this;
         }
 
         reference operator*() noexcept
         {
-            //return *m_el_it;
             std::get<2>(m_element) = m_el_it->second;
-            auto r = m_el_it->second;
-            ++r;
-            r = std::get<2>(m_element);
             return m_element;
         }
 
@@ -253,16 +260,16 @@ public:
 
     iterator end() noexcept
     {
-        auto row = std::next(std::begin(m_matrix), m_matrix.size()-1);
-        auto el = std::end(row->second);
-        return {m_matrix, row, el};
+        const auto row = std::next(std::begin(m_matrix), m_matrix.size()-1);
+        const auto el = std::end(row->second);
+        return {m_matrix, std::end(m_matrix), el};
     }
 
     const_iterator end() const noexcept
     {
-        auto row = std::next(std::begin(m_matrix), m_matrix.size()-1);
-        auto el = std::end(row->second);
-        return {m_matrix, row, el};
+        const auto row = std::next(std::begin(m_matrix), m_matrix.size()-1);
+        const auto el = std::end(row->second);
+        return {m_matrix, std::end(m_matrix), el};
     }
 
 
