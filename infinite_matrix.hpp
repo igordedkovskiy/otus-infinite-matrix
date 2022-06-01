@@ -82,7 +82,7 @@ public:
 
         size_type size() const noexcept
         {
-            std::size_t sz = 0;
+            size_type sz = 0;
             for(const auto& [key, val]:m_row)
             {
                 if(val != default_v)
