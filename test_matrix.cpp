@@ -15,6 +15,10 @@ TEST(TEST_MATRIX, task_example)
     ASSERT_TRUE(matrix.size() == 1);
 
     ASSERT_TRUE(matrix[100][100] == 314);
+
+    ((matrix[100][100] = 314) = 0) = 217;
+    ASSERT_TRUE(matrix[100][100] == 217);
+
     ASSERT_TRUE(matrix.size() == 1);
 
     matrix[100][100] = -1;
