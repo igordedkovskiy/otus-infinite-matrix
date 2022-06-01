@@ -11,7 +11,7 @@ template<Integer T, T default_v = 0> class InfiniteMatrix
 public:
     using size_type = std::size_t;
 
-    constexpr T default_value() const noexcept
+    consteval T default_value() const noexcept
     {
         return default_v;
     }
@@ -19,83 +19,7 @@ public:
     class row_t
     {
     public:
-//        class node_t
-//        {
-//        public:
-//            node_t(const T& el, size_type row, size_type col):
-//                m_element{el},
-//                m_row_number{row},
-//                m_column_number{col}
-//            {}
-//        private:
-//            T m_element;
-//            size_type m_row_number = 0;
-//            size_type m_column_number = 0;
-//        };
-
         using nested_row_t = std::unordered_map<size_type, T>;
-        //using nested_row_t = std::unordered_map<size_type, node_t>;
-
-//        struct Iterator
-//        {
-//            using value_type = std::pair<size_type, T>;
-//            using pointer = T*;
-//            using reference = T&;
-
-//            Iterator() noexcept = default;
-
-//            Iterator(const typename nested_row_t::iterator& p) noexcept:
-//                ptr{p}
-//            {}
-
-//            Iterator(const Iterator& l) noexcept:
-//                ptr{l.ptr}
-//            {}
-
-//            ~Iterator() noexcept = default;
-
-//            Iterator& operator=(const Iterator& l) noexcept
-//            {
-//                ptr = l.ptr;
-//                return *this;
-//            }
-
-//            Iterator& operator++() noexcept
-//            {
-//                ++ptr;
-//                return *this;
-//            }
-
-//            Iterator& operator++(int) noexcept
-//            {
-//                ++ptr;
-//                return *this;
-//            }
-
-//            reference operator*() const noexcept
-//            {
-//                return ptr->second;
-//            }
-
-//            pointer operator->() const noexcept
-//            {
-//                return &(ptr->second);
-//            }
-
-//            friend bool operator==(const Iterator& l, const Iterator& r) noexcept
-//            {
-//                return l.ptr == r.ptr;
-//            }
-
-//            friend bool operator!=(const Iterator& l, const Iterator& r) noexcept
-//            {
-//                return l.ptr != r.ptr;
-//            }
-
-//        private:
-//            typename nested_row_t::iterator ptr;
-//        };
-
         using Iterator = typename nested_row_t::iterator;
         using iterator = Iterator;
         using const_iterator = const Iterator;
@@ -127,7 +51,6 @@ public:
             if(el == m_row.end())
             {
                 auto res = m_row.emplace(std::make_pair(key, default_v));
-                //auto res = m_row.emplace(std::make_pair(key, node_t{default_v, key}));
                 //if(!res.second)
                 //    throw?
                 el = res.first;
@@ -162,14 +85,14 @@ public:
 
     struct Iterator
     {
-        using element_type = std::tuple<size_type, size_type, T>;
+        using element_type = std::tuple<size_type, size_type, T&>;
 
         using row_iterator = typename data_t::iterator;
         using el_iterator = typename data_t::mapped_type::iterator;
         using value_type = T;
         using pointer = T*;
         //using reference = T&;
-        using reference = element_type&;
+        using reference = element_type;
 
         Iterator() noexcept = default;
 
@@ -177,17 +100,12 @@ public:
             m_data{data},
             m_row_it{row},
             m_el_it{el}
-        {
-            const auto rw = std::next(std::begin(m_data), m_data.size()-1);
-            if((m_el_it != std::end(m_row_it->second)) && (m_el_it != std::end(rw->second)))
-                m_element = std::make_tuple(m_row_it->first, m_el_it->first, m_el_it->second);
-        }
+        {}
 
         Iterator(const Iterator& l) noexcept:
             m_data{l.m_data},
             m_row_it{l.m_row_it},
-            m_el_it{l.m_el_it},
-            m_element{l.m_element}
+            m_el_it{l.m_el_it}
         {}
 
         ~Iterator() noexcept = default;
@@ -197,7 +115,6 @@ public:
             m_data = l.m_data;
             m_row_it = l.m_row_it;
             m_el_it = l.m_el_it;
-            m_element = l.m_element;
             return *this;
         }
 
@@ -210,17 +127,12 @@ public:
                 if(m_row_it != std::end(m_data))
                     m_el_it = std::begin(m_row_it->second);
             }
-            if(m_el_it != std::end(m_row_it->second))
-                std::get<1>(m_element) = m_el_it->first;
-            if(m_row_it != std::end(m_data))
-                std::get<0>(m_element) = m_row_it->first;
             return *this;
         }
 
         reference operator*() noexcept
         {
-            std::get<2>(m_element) = m_el_it->second;
-            return m_element;
+            return {m_row_it->first, m_el_it->first, m_el_it->second};
         }
 
         pointer operator->() const noexcept
@@ -242,7 +154,6 @@ public:
         data_t& m_data;
         row_iterator m_row_it;
         el_iterator m_el_it;
-        element_type m_element{0,0,0};
     };
 
     using iterator = Iterator;
@@ -261,15 +172,13 @@ public:
     iterator end() noexcept
     {
         const auto row = std::next(std::begin(m_matrix), m_matrix.size()-1);
-        const auto el = std::end(row->second);
-        return {m_matrix, std::end(m_matrix), el};
+        return {m_matrix, std::end(m_matrix), std::end(row->second)};
     }
 
     const_iterator end() const noexcept
     {
         const auto row = std::next(std::begin(m_matrix), m_matrix.size()-1);
-        const auto el = std::end(row->second);
-        return {m_matrix, std::end(m_matrix), el};
+        return {m_matrix, std::end(m_matrix), std::end(row->second)};
     }
 
 
@@ -287,7 +196,5 @@ public:
     }
 
 private:
-//    using data_t = std::unordered_map<size_type, row_t>;
-    //using data_t = std::unordered_map<size_type, node_t>;
     data_t m_matrix;
 };
