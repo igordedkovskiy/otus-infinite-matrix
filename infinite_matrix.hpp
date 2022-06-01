@@ -2,7 +2,7 @@
 #include <unordered_map>
 #include <iterator>
 
-template<typename T> struct TD;
+//template<typename T> struct TD;
 
 template<typename T> concept Integer = std::is_integral_v<T>;
 
@@ -11,18 +11,33 @@ template<Integer T, T default_v = 0> class InfiniteMatrix
 public:
     using size_type = std::size_t;
 
+    InfiniteMatrix() noexcept = default;
+    InfiniteMatrix(const InfiniteMatrix&) noexcept = default;
+    InfiniteMatrix(InfiniteMatrix&&) noexcept = default;
+    InfiniteMatrix& operator=(const InfiniteMatrix&) noexcept = default;
+    InfiniteMatrix& operator=(InfiniteMatrix&&) noexcept = default;
+    ~InfiniteMatrix() noexcept = default;
+
     consteval T default_value() const noexcept
     {
         return default_v;
     }
 
+    /// \brief \a row_t is a wrapper, needed to overload operator[]
     class row_t
     {
     public:
         using nested_row_t = std::unordered_map<size_type, T>;
-        using Iterator = typename nested_row_t::iterator;
-        using iterator = Iterator;
-        using const_iterator = const Iterator;
+        using iterator = typename nested_row_t::iterator;
+        using const_iterator = const iterator;
+
+        row_t() noexcept = default;
+        row_t(const row_t&) noexcept = default;
+        row_t(row_t&&) noexcept = default;
+        row_t& operator=(const row_t&) noexcept = default;
+        row_t& operator=(row_t&&) noexcept = default;
+        ~row_t() noexcept = default;
+
 
         iterator begin() noexcept
         {
@@ -45,6 +60,13 @@ public:
         }
 
 
+        friend bool operator==(const row_t& l, const row_t& r)
+        {
+            return l.m_row == r.m_row;
+        }
+
+        /// \note operator[] is overloaded to insert correct default cell value, which is impossible
+        ///       to achieve with nested_row_t::operator[]
         T& operator[](const size_type& key)
         {
             auto el = m_row.find(key);
@@ -56,14 +78,6 @@ public:
                 el = res.first;
             }
             return el->second;
-        }
-
-        row_t& operator=(const row_t&) = delete;
-        row_t& operator=(row_t&&) = delete;
-
-        friend bool operator==(const row_t& l, const row_t& r)
-        {
-            return l.m_row == r.m_row;
         }
 
         size_type size() const noexcept
@@ -85,38 +99,25 @@ public:
 
     struct Iterator
     {
-        using element_type = std::tuple<size_type, size_type, T&>;
-
         using row_iterator = typename data_t::iterator;
         using el_iterator = typename data_t::mapped_type::iterator;
         using value_type = T;
         using pointer = T*;
-        //using reference = T&;
+        using element_type = std::tuple<size_type, size_type, T&>;
         using reference = element_type;
 
         Iterator() noexcept = default;
+        Iterator(const Iterator&) noexcept = default;
+        Iterator(Iterator&&) noexcept = default;
+        Iterator& operator=(const Iterator& l) noexcept = default;
+        Iterator& operator=(Iterator&& l) noexcept = default;
+        ~Iterator() noexcept = default;
 
         Iterator(data_t& data, const row_iterator& row, const el_iterator& el) noexcept:
             m_data{data},
             m_row_it{row},
             m_el_it{el}
         {}
-
-        Iterator(const Iterator& l) noexcept:
-            m_data{l.m_data},
-            m_row_it{l.m_row_it},
-            m_el_it{l.m_el_it}
-        {}
-
-        ~Iterator() noexcept = default;
-
-        Iterator& operator=(const Iterator& l) noexcept
-        {
-            m_data = l.m_data;
-            m_row_it = l.m_row_it;
-            m_el_it = l.m_el_it;
-            return *this;
-        }
 
         Iterator& operator++() noexcept
         {
@@ -180,7 +181,6 @@ public:
         const auto row = std::next(std::begin(m_matrix), m_matrix.size()-1);
         return {m_matrix, std::end(m_matrix), std::end(row->second)};
     }
-
 
     row_t& operator[](const size_type& key)
     {
