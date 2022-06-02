@@ -1,6 +1,7 @@
 #include <type_traits>
 #include <unordered_map>
 #include <iterator>
+#include <utility>
 
 template<typename T> struct TD;
 
@@ -35,17 +36,13 @@ public:
             using el_iterator = typename nested_row_t::mapped_type::iterator;
             using value_type = typename nested_row_t::value_type;
             using pointer = typename nested_row_t::pointer;
-            nested_row_t& m_data;
-            row_iterator  m_row_it;
-            el_iterator   m_el_it;
-            using element_type = decltype(std::tuple_cat(std::tie(m_row_it->first), *m_el_it));
+            using element_type = decltype(std::tuple_cat(std::tie(std::declval<row_iterator>()->first),
+                                                                  *std::declval<el_iterator>()));
             using reference = element_type;
 
             Iterator() noexcept = delete;
             Iterator(const Iterator&) noexcept = default;
             Iterator(Iterator&&) noexcept = default;
-            //Iterator& operator=(const Iterator&) noexcept = default;
-            //Iterator& operator=(Iterator&&) noexcept = default;
             ~Iterator() noexcept = default;
 
             Iterator& operator=(const Iterator& l) noexcept
@@ -100,10 +97,11 @@ public:
             {
                 return (l.m_data != r.m_data) || (l.m_row_it != r.m_row_it) || (l.m_el_it != r.m_el_it);
             }
+
         private:
-//            nested_row_t& m_data;
-//            row_iterator  m_row_it;
-//            el_iterator   m_el_it;
+            nested_row_t& m_data;
+            row_iterator  m_row_it;
+            el_iterator   m_el_it;
         };
 
         using iterator = Iterator;
@@ -182,17 +180,6 @@ public:
             Iterator& operator=(const Iterator&) noexcept = default;
             Iterator& operator=(Iterator&&) noexcept = default;
             ~Iterator() noexcept = default;
-
-//            Iterator& operator=(const Iterator& l) noexcept
-//            {
-//                m_el_it = l.m_el_it;
-//                return *this;
-//            }
-//            Iterator& operator=(Iterator&& l) noexcept
-//            {
-//                m_el_it = std::move(l.m_el_it);
-//                return *this;
-//            }
 
             Iterator(const el_iterator& el) noexcept:
                 m_el_it{el}
@@ -303,10 +290,8 @@ public:
         using el_iterator = typename row_t<N-1>::iterator;
 //        using value_type = T;
 //        using pointer = T*;
-        data_t& m_data;
-        row_iterator m_row_it;
-        el_iterator m_el_it;
-        using element_type = decltype(std::tuple_cat(std::tie(m_row_it->first), *m_el_it));
+        using element_type = decltype(std::tuple_cat(std::tie(std::declval<row_iterator>()->first),
+                                                              *std::declval<el_iterator>()));
         using reference = element_type;
 
         Iterator() noexcept = delete;
@@ -355,9 +340,9 @@ public:
         }
 
     private:
-//        data_t& m_data;
-//        row_iterator m_row_it;
-//        el_iterator m_el_it;
+        data_t& m_data;
+        row_iterator m_row_it;
+        el_iterator m_el_it;
     };
 
     using iterator = Iterator;
